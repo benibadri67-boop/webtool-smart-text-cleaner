@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Text & Markdown Cleaner - Web Tools Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    textarea::-webkit-scrollbar { width: 6px; }
+    textarea::-webkit-scrollbar-track { background: #0f172a; }
+    textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header / Navigation -->
+  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+          <i class="fas fa-wand-magic-sparkles text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-lg text-white tracking-tight">Smart Text & Markdown Cleaner</h1>
+            <span class="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full">MVP Ready</span>
+          </div>
+          <p class="text-xs text-slate-400">Pembersih spasi ganda, pemformat Markdown, dan kalkulator teks instan</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="loadSampleText()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+          <i class="fas fa-file-lines text-sky-400"></i> Contoh Teks
+        </button>
+        <button onclick="clearAll()" class="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+          <i class="fas fa-trash-can"></i> Bersihkan
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-6xl mx-auto px-4 py-6 w-full space-y-5">
+
+    <!-- Live Statistics Counter Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-sm">
+          <i class="fas fa-font"></i>
+        </div>
+        <div>
+          <div id="statWords" class="text-lg font-bold text-white font-mono">0</div>
+          <div class="text-[11px] text-slate-400">Jumlah Kata</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-sm">
+          <i class="fas fa-hashtag"></i>
+        </div>
+        <div>
+          <div id="statChars" class="text-lg font-bold text-white font-mono">0</div>
+          <div class="text-[11px] text-slate-400">Karakter (Spasi: <span id="statCharsNoSpace">0</span>)</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
+          <i class="fas fa-align-left"></i>
+        </div>
+        <div>
+          <div id="statLines" class="text-lg font-bold text-white font-mono">0</div>
+          <div class="text-[11px] text-slate-400">Baris (Paragraf: <span id="statParagraphs">0</span>)</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div>
+          <div id="statReadTime" class="text-lg font-bold text-emerald-400 font-mono">0 dtk</div>
+          <div class="text-[11px] text-slate-400">Estimasi Waktu Baca</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Cleaning Action Badges -->
+    <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3 flex flex-wrap items-center gap-2">
+      <span class="text-xs font-semibold text-slate-400 flex items-center gap-1.5 mr-1">
+        <i class="fas fa-bolt text-amber-400"></i> Aksi Cepat:
+      </span>
+      <button onclick="cleanSpaces()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        Hapus Spasi Ganda
+      </button>
+      <button onclick="cleanEmptyLines()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        Maksimal 1 Baris Kosong
+      </button>
+      <button onclick="removeAllBlankLines()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        Hapus Semua Baris Kosong
+      </button>
+      <button onclick="cleanMarkdown()" class="px-2.5 py-1.5 bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-800/60 rounded-lg text-xs font-medium transition">
+        Format Markdown Heading & List
+      </button>
+      <div class="h-4 w-px bg-slate-800 hidden sm:block"></div>
+      <button onclick="changeCase('upper')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        UPPERCASE
+      </button>
+      <button onclick="changeCase('lower')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        lowercase
+      </button>
+      <button onclick="changeCase('title')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        Title Case
+      </button>
+      <button onclick="changeCase('sentence')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition">
+        Sentence case
+      </button>
+    </div>
+
+    <!-- Dual Editor Pane -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Input Panel -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+        <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Teks Masukan (Asli)</span>
+          </div>
+          <span class="text-[11px] text-slate-500">Ketik / Tempel Teks</span>
+        </div>
+        <textarea id="inputText" oninput="updateStats()" placeholder="Tempel teks Anda di sini (misal hasil copy dari PDF, web, atau chat)..." class="w-full h-80 sm:h-96 bg-transparent p-4 text-sm text-slate-200 outline-none resize-none font-mono leading-relaxed placeholder:text-slate-600"></textarea>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+        <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Hasil Pembersihan</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="copyOutput()" id="btnCopy" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+              <i class="fas fa-copy"></i> Salin
+            </button>
+            <button onclick="downloadOutput()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+              <i class="fas fa-download"></i> Unduh
+            </button>
+          </div>
+        </div>
+        <textarea id="outputText" readonly placeholder="Hasil teks yang sudah bersih akan langsung tampil di sini..." class="w-full h-80 sm:h-96 bg-slate-950/30 p-4 text-sm text-emerald-300 outline-none resize-none font-mono leading-relaxed placeholder:text-slate-600"></textarea>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 px-4 py-2.5 bg-slate-900 border border-emerald-500/40 text-emerald-300 rounded-xl text-xs font-semibold shadow-2xl opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2">
+    <i class="fas fa-check-circle text-emerald-400"></i>
+    <span id="toastMsg">Teks berhasil disalin!</span>
+  </div>
+
+  <script>
+    const sample = `#   Judul Artikel    Kacau  
+Ini adalah contoh teks yang berantakan dengan banyak     spasi     ganda.
+
+
+Bahkan ada baris kosong yang berlebihan seperti di atas!
+
+
+##Sub-Heading Tanpa Spasi
+-item pertama
+-  item kedua dengan spasi aneh
+*  item ketiga campuran tanda`;
+
+    function updateStats() {
+      const text = document.getElementById('inputText').value;
+      const trimmed = text.trim();
+      
+      const words = trimmed ? trimmed.split(/\s+/).length : 0;
+      const chars = text.length;
+      const charsNoSpace = text.replace(/\s/g, '').length;
+      const lines = text ? text.split('\n').length : 0;
+      const paragraphs = text ? text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length : 0;
+      
+      const minutes = words / 200;
+      const readTime = words === 0 ? '0 dtk' : minutes < 1 ? Math.ceil(minutes * 60) + ' dtk' : Math.ceil(minutes) + ' mnt';
+
+      document.getElementById('statWords').innerText = words.toLocaleString('id-ID');
+      document.getElementById('statChars').innerText = chars.toLocaleString('id-ID');
+      document.getElementById('statCharsNoSpace').innerText = charsNoSpace.toLocaleString('id-ID');
+      document.getElementById('statLines').innerText = lines.toLocaleString('id-ID');
+      document.getElementById('statParagraphs').innerText = paragraphs.toLocaleString('id-ID');
+      document.getElementById('statReadTime').innerText = readTime;
+
+      // Realtime mirror if output is untouched
+      if (!document.getElementById('outputText').value || document.getElementById('outputText').dataset.modified !== 'true') {
+        document.getElementById('outputText').value = text;
+      }
+    }
+
+    function setOutput(val) {
+      const out = document.getElementById('outputText');
+      out.value = val;
+      out.dataset.modified = 'true';
+    }
+
+    function cleanSpaces() {
+      const src = document.getElementById('inputText').value;
+      // Replace multiple horizontal spaces/tabs with single space, trim trailing spaces per line
+      const res = src.split('\n').map(line => line.replace(/[ \t]+/g, ' ').trim()).join('\n');
+      setOutput(res);
+      showToast('Spasi ganda dan spasi berlebih berhasil dibersihkan!');
+    }
+
+    function cleanEmptyLines() {
+      const src = document.getElementById('outputText').value || document.getElementById('inputText').value;
+      // Collapse multiple newlines into max 2 newlines (1 blank line)
+      const res = src.replace(/\n\s*\n\s*\n+/g, '\n\n');
+      setOutput(res);
+      showToast('Baris kosong berlebih dipangkas menjadi maksimal 1 baris!');
+    }
+
+    function removeAllBlankLines() {
+      const src = document.getElementById('outputText').value || document.getElementById('inputText').value;
+      const res = src.split('\n').filter(line => line.trim().length > 0).join('\n');
+      setOutput(res);
+      showToast('Semua baris kosong berhasil dihapus!');
+    }
+
+    function cleanMarkdown() {
+      const src = document.getElementById('outputText').value || document.getElementById('inputText').value;
+      let res = src;
+      // Fix headings: #Heading -> # Heading
+      res = res.replace(/^(#{1,6})\s*([^\s#])/gm, '$1 $2');
+      // Fix list bullets: -item or *item -> - item
+      res = res.replace(/^(\s*)[-*]\s*([^\s-*])/gm, '$1- $2');
+      setOutput(res);
+      showToast('Sintaks heading & list Markdown berhasil dirapikan!');
+    }
+
+    function changeCase(type) {
+      const src = document.getElementById('outputText').value || document.getElementById('inputText').value;
+      let res = src;
+      if (type === 'upper') {
+        res = src.toUpperCase();
+      } else if (type === 'lower') {
+        res = src.toLowerCase();
+      } else if (type === 'title') {
+        res = src.toLowerCase().replace(/(?:^|\s|-)\S/g, m => m.toUpperCase());
+      } else if (type === 'sentence') {
+        res = src.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+      }
+      setOutput(res);
+      showToast(`Teks dikonversi ke format ${type.toUpperCase()}!`);
+    }
+
+    function loadSampleText() {
+      document.getElementById('inputText').value = sample;
+      updateStats();
+      cleanSpaces();
+      cleanMarkdown();
+    }
+
+    function clearAll() {
+      document.getElementById('inputText').value = '';
+      document.getElementById('outputText').value = '';
+      document.getElementById('outputText').dataset.modified = 'false';
+      updateStats();
+    }
+
+    function copyOutput() {
+      const val = document.getElementById('outputText').value || document.getElementById('inputText').value;
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        showToast('Teks berhasil disalin ke clipboard!');
+      });
+    }
+
+    function downloadOutput() {
+      const val = document.getElementById('outputText').value || document.getElementById('inputText').value;
+      if (!val) return;
+      const blob = new Blob([val], { type: 'text/markdown;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'cleaned-text.md';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('Berkas berhasil diunduh sebagai cleaned-text.md');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      t.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        t.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    // Initialize with sample on first visit if empty
+    if (!document.getElementById('inputText').value) {
+      loadSampleText();
+    }
+  </script>
+</body>
+</html>
